@@ -67,7 +67,12 @@ class _GirijaAppState extends State<GirijaApp> {
     debugPrint('📱 Current app version: $_appVersion');
     
     final updateInfo = await _updateService.checkForUpdate();
-    _appVersion, latest=${updateInfo.version}');
+    if (updateInfo == null) {
+      debugPrint('❌ Failed to fetch update info');
+      return;
+    }
+    
+    debugPrint('📦 Latest version: ${updateInfo.version}');
     final isUpdateAvailable = _updateService.isUpdateAvailable(_appVersion, updateInfo.version);
     debugPrint('📊 Is update available: $isUpdateAvailable');
     
@@ -87,13 +92,7 @@ class _GirijaAppState extends State<GirijaApp> {
         barrierDismissible: !isRequired,
         builder: (context) => UpdateDialog(
           updateInfo: updateInfo,
-          currentVersion: _ng update dialog');
-      showDialog(
-        context: context,
-        barrierDismissible: !isRequired,
-        builder: (context) => UpdateDialog(
-          updateInfo: updateInfo,
-          currentVersion: appVersion,
+          currentVersion: _appVersion,
           isRequired: isRequired,
         ),
       );
