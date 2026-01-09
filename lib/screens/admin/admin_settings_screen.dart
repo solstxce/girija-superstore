@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/theme_provider.dart';
 import '../../widgets/widgets.dart';
+import '../../services/services.dart';
 
 class AdminSettingsScreen extends StatelessWidget {
   final VoidCallback onSignOut;
@@ -80,6 +81,12 @@ class AdminSettingsScreen extends StatelessWidget {
           AppCard(
             child: Column(
               children: [
+                _SettingItem(
+                  icon: Icons.system_update,
+                  label: 'Check for Updates',
+                  onTap: () => UpdateCheckHelper.checkForUpdates(context),
+                ),
+                const Divider(),
                 _SettingItem(
                   icon: Icons.info_outline,
                   label: 'About',
