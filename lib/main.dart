@@ -5,6 +5,9 @@ import 'services/services.dart';
 import 'screens/screens.dart';
 import 'theme/app_theme.dart';
 import 'theme/theme_provider.dart';
+import 'widgets/widgets.dart';
+
+const String appVersion = '1.0.1';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,6 +35,7 @@ class GirijaApp extends StatefulWidget {
 class _GirijaAppState extends State<GirijaApp> {
   AppUser? _currentUser;
   bool _isLoading = true;
+  final UpdateService _updateService = UpdateService();
 
   @override
   void initState() {
@@ -45,6 +49,33 @@ class _GirijaAppState extends State<GirijaApp> {
       _currentUser = user;
       _isLoading = false;
     });
+    
+    // Check for updates after loading user
+    _checkForUpdate();
+  }
+
+  Future<void> _checkForUpdate() async {
+    final updateInfo = await _updateService.checkForUpdate();
+    
+    if (updateInfo == null) return;
+    
+    final isUpdateAvailable = _updateService.isUpdateAvailable(appVersion, updateInfo.version);
+    
+    if (!isUpdateAvailable) return;
+    
+    final isRequired = _updateService.isUpdateRequired(appVersion, updateInfo);
+    
+    if (mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: !isRequired,
+        builder: (context) => UpdateDialog(
+          updateInfo: updateInfo,
+          currentVersion: appVersion,
+          isRequired: isRequired,
+        ),
+      );
+    }
   }
 
   void _handleLogin(AppUser user) {
