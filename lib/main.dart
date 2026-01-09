@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'models/models.dart';
 import 'services/services.dart';
 import 'screens/screens.dart';
 import 'theme/app_theme.dart';
 import 'theme/theme_provider.dart';
 import 'widgets/widgets.dart';
-
-const String appVersion = '1.0.1';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,37 +34,60 @@ class GirijaApp extends StatefulWidget {
 class _GirijaAppState extends State<GirijaApp> {
   AppUser? _currentUser;
   bool _isLoading = true;
+  String _appVersion = '';
   final UpdateService _updateService = UpdateService();
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   void initState() {
     super.initState();
-    _checkExistingUser();
+    _initialize();
   }
 
-  Future<void> _checkExistingUser() async {
+  Future<void> _initialize() async {
+    // Get app version from package info
+    final packageInfo = await PackageInfo.fromPlatform();
+    _appVersion = packageInfo.version;
+    
+    // Check existing user
     final user = await widget.storageService.getCurrentUser();
     setState(() {
       _currentUser = user;
       _isLoading = false;
     });
     
-    // Check for updates after loading user
-    _checkForUpdate();
+    // Schedule update check after first frame is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkForUpdate();
+    });
   }
 
   Future<void> _checkForUpdate() async {
+    debugPrint('🚀 Starting update check...');
+    debugPrint('📱 Current app version: $_appVersion');
+    
     final updateInfo = await _updateService.checkForUpdate();
+    _appVersion, latest=${updateInfo.version}');
+    final isUpdateAvailable = _updateService.isUpdateAvailable(_appVersion, updateInfo.version);
+    debugPrint('📊 Is update available: $isUpdateAvailable');
     
-    if (updateInfo == null) return;
+    if (!isUpdateAvailable) {
+      debugPrint('✅ App is up to date');
+      return;
+    }
     
-    final isUpdateAvailable = _updateService.isUpdateAvailable(appVersion, updateInfo.version);
+    final isRequired = _updateService.isUpdateRequired(_appVersion, updateInfo);
+    debugPrint('⚠️ Is update required: $isRequired');
     
-    if (!isUpdateAvailable) return;
-    
-    final isRequired = _updateService.isUpdateRequired(appVersion, updateInfo);
-    
-    if (mounted) {
+    final context = _navigatorKey.currentContext;
+    if (context != null && mounted) {
+      debugPrint('🎯 Showing update dialog');
+      showDialog(
+        context: context,
+        barrierDismissible: !isRequired,
+        builder: (context) => UpdateDialog(
+          updateInfo: updateInfo,
+          currentVersion: _ng update dialog');
       showDialog(
         context: context,
         barrierDismissible: !isRequired,
@@ -75,6 +97,8 @@ class _GirijaAppState extends State<GirijaApp> {
           isRequired: isRequired,
         ),
       );
+    } else {
+      debugPrint('❌ Navigator context not available');
     }
   }
 
@@ -92,6 +116,7 @@ class _GirijaAppState extends State<GirijaApp> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     
     return MaterialApp(
+      navigatorKey: _navigatorKey,
       title: 'Girija Store',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,

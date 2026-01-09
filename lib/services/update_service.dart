@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/models.dart';
 
@@ -7,16 +8,24 @@ class UpdateService {
   
   Future<UpdateInfo?> checkForUpdate() async {
     try {
+      debugPrint('🔍 Checking for updates from: $updateUrl');
       final response = await http.get(Uri.parse(updateUrl));
       
+      debugPrint('📡 Response status: ${response.statusCode}');
+      
       if (response.statusCode == 200) {
+        debugPrint('📦 Response body: ${response.body}');
         final data = json.decode(response.body) as Map<String, dynamic>;
-        return UpdateInfo.fromJson(data);
+        final updateInfo = UpdateInfo.fromJson(data);
+        debugPrint('✅ Update info parsed: version=${updateInfo.version}, required=${updateInfo.required}');
+        return updateInfo;
       }
       
+      debugPrint('❌ Failed to fetch update info');
       return null;
     } catch (e) {
       // Return null if there's any error (network, parsing, etc.)
+      debugPrint('❌ Error checking for updates: $e');
       return null;
     }
   }

@@ -1,8 +1,9 @@
 {
-    "version": "1.0.3",
+    "version": "1.0.4",
     "build": "https://github.com/solstxce/girija-superstore/releases/download/{version}/app-release.apk",
     "required": false,
     "accepted_previous_versions": [
+        "1.0.3",
         "1.0.2"
     ]
 }
